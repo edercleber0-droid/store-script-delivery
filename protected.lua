@@ -1,0 +1,3 @@
+print("SCRIPT LIBERADO ✔")
+
+-- COLE SEU SCRIPT AQUI
