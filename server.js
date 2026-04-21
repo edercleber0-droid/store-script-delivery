@@ -6,7 +6,7 @@ const app = express();
 
 const PASSWORD = "junior-hub-key-321";
 
-// 🔍 verifica key na sua API
+// 🔍 verifica key na sua API principal
 async function checkKey(key, userId) {
   try {
     const res = await axios.get(
@@ -18,7 +18,12 @@ async function checkKey(key, userId) {
   }
 }
 
-// 🔐 entrega script protegido
+// 🌐 rota principal (pra evitar "Cannot GET /")
+app.get("/", (req, res) => {
+  res.send("SCRIPT DELIVERY ONLINE ✔");
+});
+
+// 🔐 rota protegida
 app.get("/script", async (req, res) => {
   const { key, userId, password } = req.query;
 
@@ -38,10 +43,15 @@ app.get("/script", async (req, res) => {
     return res.send("KEY EM USO");
   }
 
-  // 🔥 envia seu script sem alterar nada
+  // 🔥 entrega script
   const script = fs.readFileSync("protected.lua", "utf8");
 
   res.send(script);
 });
 
-app.listen(process.env.PORT || 3000);
+// 🚀 start
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("SCRIPT DELIVERY ONLINE:", PORT);
+});
