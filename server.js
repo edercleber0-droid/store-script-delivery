@@ -4,10 +4,9 @@ const axios = require("axios");
 
 const app = express();
 
-// 🔐 SUA SENHA
 const PASSWORD = "junior-hub-key-321";
 
-// 🔍 VERIFICA NA API DE KEYS
+// 🔍 verifica key na sua API
 async function checkKey(key, userId) {
   try {
     const res = await axios.get(
@@ -19,45 +18,30 @@ async function checkKey(key, userId) {
   }
 }
 
-// 🌐 STATUS
-app.get("/", (req, res) => {
-  res.send("SCRIPT DELIVERY ONLINE ✔");
-});
-
-// 🔐 ROTA PROTEGIDA
+// 🔐 entrega script protegido
 app.get("/script", async (req, res) => {
-  const key = req.query.key;
-  const userId = req.query.userId;
-  const password = req.query.password;
+  const { key, userId, password } = req.query;
 
-  // 🔒 SENHA
   if (password !== PASSWORD) {
-    return res.send("SENHA INVALIDA");
+    return res.send("ACESSO NEGADO");
   }
 
   if (!key || !userId) {
-    return res.send("FALTA KEY OU USERID");
+    return res.send("FALTA DADOS");
   }
 
   const result = await checkKey(key, userId);
 
-  if (!result.valid) return res.send("ACESSO NEGADO");
-
+  if (!result.valid) return res.send("KEY INVALIDA");
   if (result.expired) return res.send("KEY EXPIRADA");
-
   if (result.reason === "used_by_other_user") {
     return res.send("KEY EM USO");
   }
 
-  // 🔥 ENTREGA SCRIPT
+  // 🔥 envia seu script sem alterar nada
   const script = fs.readFileSync("protected.lua", "utf8");
 
   res.send(script);
 });
 
-// 🚀 START
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log("SCRIPT DELIVERY ONLINE:", PORT);
-});
+app.listen(process.env.PORT || 3000);
