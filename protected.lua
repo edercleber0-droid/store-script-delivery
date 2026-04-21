@@ -1,3 +1,1 @@
-print("SCRIPT LIBERADO ✔")
-
--- COLE SEU SCRIPT AQUI
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Frostzx-eternal/JUNINHUB/refs/heads/main/JUNINHUB"))()
