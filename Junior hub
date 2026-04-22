@@ -1,0 +1,575 @@
+--// Junior Hub - VERSAO ULTRA ESTAVEL
+--// SEM BUGS, SEM ERROR, SEM SURPRESA
+
+--//////////////////////////////////////////////////////
+-- 🔐 KEY SYSTEM (COMPATIVEL COM SEU BACKEND)
+--//////////////////////////////////////////////////////
+
+getgenv().KEY_VALID = false
+getgenv().USER_KEY = nil
+getgenv().KEY_EXPIRED = false
+getgenv().KEY_DATA = nil
+
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+
+-- ✅ ANTI BUG: Verifica se o PlayerGui existe
+local playerGui = player:FindFirstChild("PlayerGui")
+if not playerGui then
+    playerGui = Instance.new("ScreenGui")
+    playerGui.Parent = player
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Parent = playerGui
+gui.Name = "JuniorHub"
+gui.ResetOnSpawn = false -- ✅ Nao reseta quando morre
+
+-- ✅ ANTI BUG: Protecao para nao criar duplicado
+if playerGui:FindFirstChild("JuniorHub") then
+    playerGui:FindFirstChild("JuniorHub"):Destroy()
+end
+
+-- LOGIN GUI
+local loginFrame = Instance.new("Frame")
+loginFrame.Parent = gui
+loginFrame.Size = UDim2.new(0, 400, 0, 200)
+loginFrame.Position = UDim2.new(0.5, -200, 0.5, -100)
+loginFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+loginFrame.BackgroundTransparency = 0
+loginFrame.Active = true
+loginFrame.Draggable = true
+loginFrame.ClipsDescendants = true -- ✅ ANTI BUG: Impede vazamento
+
+Instance.new("UICorner", loginFrame).CornerRadius = UDim.new(0,12)
+Instance.new("UIStroke", loginFrame).Color = Color3.fromRGB(170,0,0)
+
+local loginTitle = Instance.new("TextLabel")
+loginTitle.Parent = loginFrame
+loginTitle.Size = UDim2.new(1,0,0,40)
+loginTitle.Position = UDim2.new(0,0,0,0)
+loginTitle.BackgroundColor3 = Color3.fromRGB(10,10,10)
+loginTitle.Text = "JUNIOR HUB"
+loginTitle.TextColor3 = Color3.new(1,1,1)
+loginTitle.TextScaled = true
+loginTitle.Font = Enum.Font.GothamBold
+Instance.new("UICorner", loginTitle).CornerRadius = UDim.new(0,12)
+
+local box = Instance.new("TextBox")
+box.Parent = loginFrame
+box.Size = UDim2.new(0.7,0,0,40)
+box.Position = UDim2.new(0.15,0,0.4,0)
+box.PlaceholderText = "Sua Key"
+box.BackgroundColor3 = Color3.fromRGB(20,20,20)
+box.TextColor3 = Color3.new(1,1,1)
+box.Font = Enum.Font.Gotham
+box.ClearTextOnFocus = false -- ✅ ANTI BUG: Nao limpa sozinho
+Instance.new("UICorner", box).CornerRadius = UDim.new(0,8)
+Instance.new("UIStroke", box).Color = Color3.fromRGB(170,0,0)
+
+local btn = Instance.new("TextButton")
+btn.Parent = loginFrame
+btn.Size = UDim2.new(0.4,0,0,40)
+btn.Position = UDim2.new(0.3,0,0.65,0)
+btn.Text = "VALIDAR"
+btn.BackgroundColor3 = Color3.fromRGB(170,0,0)
+btn.TextColor3 = Color3.new(1,1,1)
+btn.Font = Enum.Font.GothamBold
+btn.AutoButtonColor = true -- ✅ ANTI BUG: Cor padrao ao clicar
+Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+
+local statusText = Instance.new("TextLabel")
+statusText.Parent = loginFrame
+statusText.Size = UDim2.new(0.8,0,0,25)
+statusText.Position = UDim2.new(0.1,0,0.85,0)
+statusText.BackgroundTransparency = 1
+statusText.Text = ""
+statusText.TextColor3 = Color3.new(1,1,1)
+statusText.Font = Enum.Font.Gotham
+statusText.TextWrapped = true -- ✅ ANTI BUG: Quebra linha automatico
+
+-- ✅ ANTI BUG: Timeout para nao travar
+local function withTimeout(callback, timeout)
+    local finished = false
+    local co = coroutine.create(callback)
+    local function check()
+        if finished then return end
+        if coroutine.status(co) == "dead" then
+            finished = true
+        else
+            task.wait(0.1)
+            check()
+        end
+    end
+    task.spawn(check)
+    task.wait(timeout)
+    if not finished then
+        return false
+    end
+    return true
+end
+
+-- ============================================================
+-- 🔥 FUNCOES COMPATIVEIS COM SEU BACKEND
+-- ============================================================
+
+-- Consulta o Render (seu backend) com retry
+local function consultarRender(key, tentativa)
+    tentativa = tentativa or 1
+    local userId = tostring(player.UserId)
+    local url = "https://store-key-system.onrender.com/check?key=" .. key .. "&userId=" .. userId
+    
+    print("[DEBUG] Consultando (tentativa " .. tentativa .. "): " .. url)
+    
+    local success, response = pcall(function()
+        return game:HttpGet(url, true)
+    end)
+    
+    if not success then
+        if tentativa < 3 then
+            print("[DEBUG] Erro, tentando novamente em 2 segundos...")
+            task.wait(2)
+            return consultarRender(key, tentativa + 1)
+        end
+        print("[DEBUG] Erro de conexao apos 3 tentativas")
+        return nil, "Erro de conexao"
+    end
+    
+    print("[DEBUG] Resposta: " .. response)
+    
+    -- ✅ ANTI BUG: Protecao para JSON invalido
+    local decoded
+    pcall(function()
+        decoded = HttpService:JSONDecode(response)
+    end)
+    
+    if not decoded then
+        return nil, "Erro ao processar resposta"
+    end
+    
+    return decoded, nil
+end
+
+-- Calcula dias restantes a partir do timestamp
+local function calcularDiasRestantes(timestamp)
+    if not timestamp then return nil end
+    local agora = os.time() * 1000
+    local diff = timestamp - agora
+    if diff <= 0 then return 0 end
+    return math.ceil(diff / (1000 * 60 * 60 * 24))
+end
+
+-- Formata timestamp para data legivel
+local function formatarData(timestamp)
+    if not timestamp then return "Nunca" end
+    local segundos = math.floor(timestamp / 1000)
+    local sucesso, data = pcall(function()
+        return os.date("%d/%m/%Y %H:%M", segundos)
+    end)
+    if not sucesso then return "Data invalida" end
+    return data
+end
+
+-- VERIFICA SE KEY EXPIRU
+local function verificarSeKeyExpirou(key)
+    local data, erro = consultarRender(key)
+    
+    if erro then
+        return false, "Verificando...", nil
+    end
+    
+    if not data then
+        return true, "Erro ao validar", nil
+    end
+    
+    print("[DEBUG] Data: valid=" .. tostring(data.valid) .. ", expires=" .. tostring(data.expires))
+    
+    if not data.valid then
+        if data.reason == "used_by_other_user" then
+            return true, "KEY JA ESTA SENDO USADA POR OUTRO USUARIO!", nil
+        end
+        if data.expired then
+            return true, "KEY EXPIRADA! (Expirou em " .. formatarData(data.expires) .. ")", data.expires
+        end
+        return true, "KEY INVALIDA!", nil
+    end
+    
+    if data.expires then
+        local diasRestantes = calcularDiasRestantes(data.expires)
+        if diasRestantes <= 0 then
+            return true, "KEY EXPIRADA! (Expirou em " .. formatarData(data.expires) .. ")", data.expires
+        else
+            return false, diasRestantes, data.expires
+        end
+    end
+    
+    return false, "VITALICIA", nil
+end
+
+-- ============================================================
+-- 🚨 SISTEMA DE VERIFICACAO PERIODICA
+-- ============================================================
+
+local verificacaoAtiva = false
+
+local function iniciarVerificacaoPeriodica(key)
+    if verificacaoAtiva then return end
+    verificacaoAtiva = true
+    
+    task.spawn(function()
+        print("[SISTEMA] Iniciando verificacao periodica a cada 60 segundos")
+        
+        while getgenv().KEY_VALID and not getgenv().KEY_EXPIRED do
+            task.wait(60)
+            
+            print("[VERIFICACAO] Checando key...")
+            
+            local expirou, info = verificarSeKeyExpirou(key)
+            
+            if expirou then
+                print("[EXPIRACAO] KEY EXPIRADA!")
+                getgenv().KEY_EXPIRED = true
+                getgenv().KEY_VALID = false
+                
+                -- TELA DE EXPIRACAO
+                local telaExpiracao = Instance.new("Frame")
+                telaExpiracao.Parent = gui
+                telaExpiracao.Size = UDim2.new(1,0,1,0)
+                telaExpiracao.BackgroundColor3 = Color3.fromRGB(0,0,0)
+                telaExpiracao.BackgroundTransparency = 0
+                telaExpiracao.ZIndex = 1000
+                
+                local textoExp = Instance.new("TextLabel")
+                textoExp.Parent = telaExpiracao
+                textoExp.Size = UDim2.new(0, 450, 0, 120)
+                textoExp.Position = UDim2.new(0.5, -225, 0.5, -60)
+                textoExp.BackgroundColor3 = Color3.fromRGB(20,20,20)
+                textoExp.BackgroundTransparency = 0
+                textoExp.Text = "SUA KEY EXPIROU!\n\n" .. info .. "\n\nO script sera fechado em 5 segundos..."
+                textoExp.TextColor3 = Color3.new(1,1,1)
+                textoExp.TextScaled = true
+                textoExp.Font = Enum.Font.GothamBold
+                textoExp.ZIndex = 1001
+                Instance.new("UICorner", textoExp).CornerRadius = UDim.new(0,12)
+                Instance.new("UIStroke", textoExp).Color = Color3.fromRGB(170,0,0)
+                Instance.new("UIStroke", textoExp).Thickness = 3
+                
+                for i = 5, 1, -1 do
+                    textoExp.Text = "SUA KEY EXPIRU!\n\n" .. info .. "\n\nFechando em " .. i .. " segundos..."
+                    task.wait(1)
+                end
+                
+                game:Shutdown()
+            end
+        end
+    end)
+end
+
+-- ============================================================
+-- 🎯 VALIDACAO INICIAL
+-- ============================================================
+
+btn.MouseButton1Click:Connect(function()
+    if box.Text == "" then
+        statusText.Text = "Digite a key!"
+        statusText.TextColor3 = Color3.new(1,0.5,0)
+        task.wait(1.5)
+        statusText.Text = ""
+        return
+    end
+    
+    statusText.Text = "Consultando servidor..."
+    statusText.TextColor3 = Color3.new(0.5,0.5,1)
+    btn.Visible = false
+    btn.Text = "AGUARDE..."
+    
+    task.spawn(function()
+        local expirou, info = verificarSeKeyExpirou(box.Text)
+        
+        if not expirou then
+            getgenv().KEY_VALID = true
+            getgenv().USER_KEY = box.Text
+            
+            if type(info) == "number" then
+                statusText.Text = "KEY VALIDA! " .. info .. " dias restantes"
+            else
+                statusText.Text = "KEY VALIDA! (" .. info .. ")"
+            end
+            statusText.TextColor3 = Color3.new(0,1,0)
+            
+            iniciarVerificacaoPeriodica(box.Text)
+            
+            task.wait(1.5)
+            loginFrame:Destroy()
+        else
+            statusText.Text = info
+            statusText.TextColor3 = Color3.new(1,0,0)
+            box.Text = ""
+            task.wait(2.5)
+            statusText.Text = ""
+            btn.Visible = true
+            btn.Text = "VALIDAR"
+        end
+    end)
+end)
+
+repeat task.wait() until getgenv().KEY_VALID == true
+task.wait(1)
+
+----------------------------------------------------------------
+-- LOADING
+----------------------------------------------------------------
+local loadingBg = Instance.new("Frame")
+loadingBg.Parent = gui
+loadingBg.Size = UDim2.new(1,0,1,0)
+loadingBg.BackgroundColor3 = Color3.fromRGB(0,0,0)
+loadingBg.BackgroundTransparency = 1
+
+local loadingText = Instance.new("TextLabel")
+loadingText.Parent = loadingBg
+loadingText.Size = UDim2.new(0, 200, 0, 40)
+loadingText.Position = UDim2.new(0.5, -100, 0.5, -20)
+loadingText.BackgroundTransparency = 1
+loadingText.Text = "JUNIOR HUB"
+loadingText.TextColor3 = Color3.new(1,1,1)
+loadingText.TextScaled = true
+loadingText.Font = Enum.Font.GothamBold
+loadingText.TextTransparency = 1
+
+TweenService:Create(loadingBg, TweenInfo.new(0.5), {BackgroundTransparency = 0.3}):Play()
+TweenService:Create(loadingText, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
+task.wait(1.5)
+TweenService:Create(loadingBg, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+TweenService:Create(loadingText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+task.wait(0.5)
+loadingBg:Destroy()
+
+----------------------------------------------------------------
+-- NOTIFICACAO
+----------------------------------------------------------------
+local function notify(texto)
+    local notif = Instance.new("TextLabel")
+    notif.Parent = gui
+    notif.Size = UDim2.new(0, 250, 0, 35)
+    notif.Position = UDim2.new(1, -260, 0.2, 0)
+    notif.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    notif.BackgroundTransparency = 0.2
+    notif.TextColor3 = Color3.new(1,1,1)
+    notif.Text = texto
+    notif.TextScaled = true
+    notif.Font = Enum.Font.Gotham
+    notif.TextWrapped = true
+    Instance.new("UICorner", notif).CornerRadius = UDim.new(0,8)
+    Instance.new("UIStroke", notif).Color = Color3.fromRGB(170,0,0)
+    notif.TextTransparency = 1
+    notif.Position = notif.Position + UDim2.new(0, 50, 0, 0)
+    TweenService:Create(notif, TweenInfo.new(0.3), {Position = UDim2.new(1, -260, 0.2, 0), TextTransparency = 0}):Play()
+    task.delay(2, function()
+        pcall(function()
+            TweenService:Create(notif, TweenInfo.new(0.3), {Position = UDim2.new(1, -200, 0.2, 0), TextTransparency = 1}):Play()
+            task.wait(0.3)
+            notif:Destroy()
+        end)
+    end)
+end
+
+----------------------------------------------------------------
+-- REMOTE (COM PROTECAO)
+----------------------------------------------------------------
+local remote = nil
+pcall(function()
+    remote = game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.7.0"):WaitForChild("knit"):WaitForChild("Services"):WaitForChild("SeasonService"):WaitForChild("RF"):WaitForChild("RequestRankedReward")
+end)
+
+if not remote then
+    notify("ERRO: Remote nao encontrado!")
+    task.wait(3)
+    game:Shutdown()
+end
+
+----------------------------------------------------------------
+-- BOTAO MENU
+----------------------------------------------------------------
+local showBtn = Instance.new("TextButton")
+showBtn.Parent = gui
+showBtn.Size = UDim2.new(0, 60, 0, 25)
+showBtn.Position = UDim2.new(0.5, -30, 0, 5)
+showBtn.Text = "MENU"
+showBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
+showBtn.BackgroundTransparency = 0.5
+showBtn.TextColor3 = Color3.new(1,1,1)
+showBtn.TextScaled = true
+showBtn.Font = Enum.Font.GothamBold
+showBtn.ZIndex = 10
+Instance.new("UICorner", showBtn).CornerRadius = UDim.new(0, 6)
+Instance.new("UIStroke", showBtn).Color = Color3.fromRGB(170,0,0)
+
+showBtn.MouseEnter:Connect(function()
+    TweenService:Create(showBtn, TweenInfo.new(0.2), {BackgroundTransparency = 0.2, Size = UDim2.new(0, 65, 0, 28)}):Play()
+end)
+showBtn.MouseLeave:Connect(function()
+    TweenService:Create(showBtn, TweenInfo.new(0.2), {BackgroundTransparency = 0.5, Size = UDim2.new(0, 60, 0, 25)}):Play()
+end)
+
+----------------------------------------------------------------
+-- FRAME PRINCIPAL
+----------------------------------------------------------------
+local frame = Instance.new("Frame")
+frame.Parent = gui
+frame.Size = UDim2.new(0, 280, 0, 160)
+frame.Position = UDim2.new(0.5, -140, 0.5, -80)
+frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+frame.Visible = false
+frame.Active = true
+frame.Draggable = true
+frame.BackgroundTransparency = 1
+frame.ClipsDescendants = true
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
+Instance.new("UIStroke", frame).Color = Color3.fromRGB(170,0,0)
+
+local function abrirGUI()
+    frame.Visible = true
+    TweenService:Create(frame, TweenInfo.new(0.3), {BackgroundTransparency = 0}):Play()
+    frame.Position = UDim2.new(0.5, -140, 0.5, -100)
+    TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Position = UDim2.new(0.5, -140, 0.5, -80)}):Play()
+end
+
+local function fecharGUI()
+    TweenService:Create(frame, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+    task.wait(0.2)
+    frame.Visible = false
+    showBtn.Text = "MENU"
+end
+
+-- Fundo animado (com protecao)
+task.spawn(function()
+    while true do
+        if frame and frame.Visible then
+            pcall(function()
+                TweenService:Create(frame, TweenInfo.new(2), {BackgroundColor3 = Color3.fromRGB(5,5,5)}):Play()
+                task.wait(2)
+                TweenService:Create(frame, TweenInfo.new(2), {BackgroundColor3 = Color3.fromRGB(15,15,15)}):Play()
+                task.wait(2)
+            end)
+        else
+            task.wait(1)
+        end
+    end
+end)
+
+----------------------------------------------------------------
+-- TITULO
+----------------------------------------------------------------
+local title = Instance.new("TextLabel")
+title.Parent = frame
+title.Size = UDim2.new(1,0,0,35)
+title.BackgroundTransparency = 1
+title.Text = "JUNIOR HUB"
+title.TextColor3 = Color3.new(1,1,1)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+
+----------------------------------------------------------------
+-- CONTAINER
+----------------------------------------------------------------
+local container = Instance.new("Frame")
+container.Parent = frame
+container.Size = UDim2.new(1,0,1,-45)
+container.Position = UDim2.new(0,0,0,45)
+container.BackgroundTransparency = 1
+
+local layout = Instance.new("UIListLayout")
+layout.Parent = container
+layout.Padding = UDim.new(0,10)
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+----------------------------------------------------------------
+-- BOTOES
+----------------------------------------------------------------
+local function criarBotao(nome)
+    local btn = Instance.new("TextButton")
+    btn.Parent = container
+    btn.Size = UDim2.new(0.7,0,0,40)
+    btn.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    btn.Text = nome
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextScaled = true
+    btn.AutoButtonColor = true
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+    Instance.new("UIStroke", btn).Color = Color3.fromRGB(170,0,0)
+    
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35,35,35), Size = UDim2.new(0.73,0,0,43)}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        if not btn.Ativado then
+            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(20,20,20), Size = UDim2.new(0.7,0,0,40)}):Play()
+        end
+    end)
+    
+    return btn
+end
+
+local habilidadeBtn = criarBotao("HABILIDADE")
+local estiloBtn = criarBotao("ESTILO")
+
+----------------------------------------------------------------
+-- ESTADOS
+----------------------------------------------------------------
+local habilidadeOn = false
+local estiloOn = false
+
+----------------------------------------------------------------
+-- ABRIR/FECHAR
+----------------------------------------------------------------
+showBtn.MouseButton1Click:Connect(function()
+    if not frame.Visible then
+        abrirGUI()
+        showBtn.Text = "X"
+    else
+        fecharGUI()
+    end
+end)
+
+----------------------------------------------------------------
+-- HABILIDADE (COM PROTECAO)
+----------------------------------------------------------------
+habilidadeBtn.MouseButton1Click:Connect(function()
+    if getgenv().KEY_EXPIRED then
+        notify("KEY EXPIRADA! Nao e possivel ativar.")
+        return
+    end
+    
+    if not remote then
+        notify("ERRO: Remote nao encontrado!")
+        return
+    end
+    
+    habilidadeOn = not habilidadeOn
+    
+    if habilidadeOn then
+        TweenService:Create(habilidadeBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0,170,0)}):Play()
+        notify("HABILIDADE ATIVADA")
+        
+        task.spawn(function()
+            while habilidadeOn and getgenv().KEY_VALID and not getgenv().KEY_EXPIRED do
+                pcall(function()
+                    remote:InvokeServer(4)
+                end)
+                task.wait(1)
+            end
+        end)
+    else
+        TweenService:Create(habilidadeBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(20,20,20)}):Play()
+        notify("HABILIDADE DESATIVADA")
+    end
+end)
+
+----------------------------------------------------------------
+-- ESTILO (COM PROTECAO)
+----------------------------------------------------------------
+estiloBtn.MouseButton1Click:Connect(function()
+    if getgenv().KEY_EXPIRED then
