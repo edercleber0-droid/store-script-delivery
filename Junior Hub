@@ -1,100 +1,70 @@
---// Junior Hub - VERSAO MOBILE (DELTA/ARCEUS/HYDROGEN)
---// BACKEND: store-key-system.onrender.com
+--// Junior Hub - SIMPLIFICADO PARA DELTA
 
 getgenv().KEY_VALID = false
-getgenv().USER_KEY = nil
-getgenv().KEY_EXPIRED = false
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
-local UserInputService = game:GetService("UserInputService")
 
 local gui = Instance.new("ScreenGui")
 gui.Parent = player:WaitForChild("PlayerGui")
 gui.Name = "JuniorHub"
-gui.ResetOnSpawn = false
 
-pcall(function()
-    if player.PlayerGui:FindFirstChild("JuniorHub") and player.PlayerGui:FindFirstChild("JuniorHub") ~= gui then
-        player.PlayerGui:FindFirstChild("JuniorHub"):Destroy()
-    end
-end)
+-- TELA DE LOGIN
+local screen = Instance.new("Frame")
+screen.Parent = gui
+screen.Size = UDim2.new(0, 350, 0, 180)
+screen.Position = UDim2.new(0.5, -175, 0.5, -90)
+screen.BackgroundColor3 = Color3.fromRGB(0,0,0)
+screen.BackgroundTransparency = 0
+screen.Active = true
+screen.Draggable = true
 
--- LOGIN GUI
-local loginFrame = Instance.new("Frame")
-loginFrame.Parent = gui
-loginFrame.Size = UDim2.new(0, 400, 0, 200)
-loginFrame.Position = UDim2.new(0.5, -200, 0.5, -100)
-loginFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
-loginFrame.BackgroundTransparency = 0
-loginFrame.Active = true
-loginFrame.Draggable = true
+local corner = Instance.new("UICorner")
+corner.Parent = screen
+corner.CornerRadius = UDim.new(0, 10)
 
-local loginCorner = Instance.new("UICorner")
-loginCorner.Parent = loginFrame
-loginCorner.CornerRadius = UDim.new(0, 12)
+local title = Instance.new("TextLabel")
+title.Parent = screen
+title.Size = UDim2.new(1,0,0,35)
+title.Position = UDim2.new(0,0,0,0)
+title.BackgroundColor3 = Color3.fromRGB(20,20,20)
+title.Text = "JUNIOR HUB"
+title.TextColor3 = Color3.new(1,1,1)
+title.TextSize = 18
+title.Font = Enum.Font.GothamBold
 
-local loginBorder = Instance.new("Frame")
-loginBorder.Parent = loginFrame
-loginBorder.Size = UDim2.new(1, 0, 1, 0)
-loginBorder.Position = UDim2.new(0, 0, 0, 0)
-loginBorder.BackgroundTransparency = 1
-loginBorder.BorderSizePixel = 2
-loginBorder.BorderColor3 = Color3.fromRGB(170,0,0)
+local keyBox = Instance.new("TextBox")
+keyBox.Parent = screen
+keyBox.Size = UDim2.new(0.8,0,0,40)
+keyBox.Position = UDim2.new(0.1,0,0.35,0)
+keyBox.PlaceholderText = "Digite sua Key"
+keyBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
+keyBox.TextColor3 = Color3.new(1,1,1)
+keyBox.TextSize = 16
+keyBox.Font = Enum.Font.Gotham
 
-local loginTitle = Instance.new("TextLabel")
-loginTitle.Parent = loginFrame
-loginTitle.Size = UDim2.new(1,0,0,40)
-loginTitle.Position = UDim2.new(0,0,0,0)
-loginTitle.BackgroundColor3 = Color3.fromRGB(10,10,10)
-loginTitle.Text = "JUNIOR HUB"
-loginTitle.TextColor3 = Color3.new(1,1,1)
-loginTitle.TextSize = 20
-loginTitle.Font = Enum.Font.GothamBold
-local titleCorner = Instance.new("UICorner")
-titleCorner.Parent = loginTitle
-titleCorner.CornerRadius = UDim.new(0, 12)
-
-local box = Instance.new("TextBox")
-box.Parent = loginFrame
-box.Size = UDim2.new(0.7,0,0,40)
-box.Position = UDim2.new(0.15,0,0.4,0)
-box.PlaceholderText = "Sua Key"
-box.BackgroundColor3 = Color3.fromRGB(20,20,20)
-box.TextColor3 = Color3.new(1,1,1)
-box.TextSize = 16
-box.Font = Enum.Font.Gotham
-box.ClearTextOnFocus = false
-local boxCorner = Instance.new("UICorner")
-boxCorner.Parent = box
-boxCorner.CornerRadius = UDim.new(0, 8)
-
-local btn = Instance.new("TextButton")
-btn.Parent = loginFrame
-btn.Size = UDim2.new(0.4,0,0,40)
-btn.Position = UDim2.new(0.3,0,0.65,0)
-btn.Text = "VALIDAR"
-btn.BackgroundColor3 = Color3.fromRGB(170,0,0)
-btn.TextColor3 = Color3.new(1,1,1)
-btn.TextSize = 18
-btn.Font = Enum.Font.GothamBold
-local btnCorner = Instance.new("UICorner")
-btnCorner.Parent = btn
-btnCorner.CornerRadius = UDim.new(0, 8)
+local validateBtn = Instance.new("TextButton")
+validateBtn.Parent = screen
+validateBtn.Size = UDim2.new(0.5,0,0,40)
+validateBtn.Position = UDim2.new(0.25,0,0.6,0)
+validateBtn.Text = "VALIDAR"
+validateBtn.BackgroundColor3 = Color3.fromRGB(170,0,0)
+validateBtn.TextColor3 = Color3.new(1,1,1)
+validateBtn.TextSize = 16
+validateBtn.Font = Enum.Font.GothamBold
 
 local statusText = Instance.new("TextLabel")
-statusText.Parent = loginFrame
-statusText.Size = UDim2.new(0.8,0,0,25)
-statusText.Position = UDim2.new(0.1,0,0.85,0)
+statusText.Parent = screen
+statusText.Size = UDim2.new(0.8,0,0,30)
+statusText.Position = UDim2.new(0.1,0,0.8,0)
 statusText.BackgroundTransparency = 1
 statusText.Text = ""
 statusText.TextColor3 = Color3.new(1,1,1)
-statusText.TextSize = 14
-statusText.Font = Enum.Font.Gotham
+statusText.TextSize = 12
 
--- FUNCAO CONSULTAR RENDER (URL CORRETA)
-local function consultarRender(key)
+-- FUNÇÃO PARA VALIDAR KEY
+local function checkKey(key)
     local userId = tostring(player.UserId)
     local url = "https://store-key-system.onrender.com/check?key=" .. key .. "&userId=" .. userId
     
@@ -103,392 +73,159 @@ local function consultarRender(key)
     end)
     
     if not success then
-        return nil, "Erro de conexao"
+        return {valid = false, error = "Erro de conexão"}
     end
     
-    local decoded = HttpService:JSONDecode(response)
-    return decoded, nil
+    return HttpService:JSONDecode(response)
 end
 
-local function calcularDiasRestantes(timestamp)
-    if not timestamp then return nil end
-    local agora = os.time() * 1000
-    local diff = timestamp - agora
-    if diff <= 0 then return 0 end
-    return math.ceil(diff / (1000 * 60 * 60 * 24))
-end
-
-local function verificarSeKeyExpirou(key)
-    local data, erro = consultarRender(key)
-    
-    if erro then
-        return false, "Verificando..."
-    end
-    
-    if not data then
-        return true, "Erro ao validar"
-    end
-    
-    if not data.valid then
-        if data.reason == "used_by_other_user" then
-            return true, "KEY JA ESTA SENDO USADA POR OUTRO USUARIO!"
-        end
-        if data.expired then
-            return true, "KEY EXPIRADA!"
-        end
-        return true, "KEY INVALIDA!"
-    end
-    
-    if data.expires then
-        local diasRestantes = calcularDiasRestantes(data.expires)
-        if diasRestantes <= 0 then
-            return true, "KEY EXPIRADA!"
-        else
-            return false, diasRestantes
-        end
-    end
-    
-    return false, "VITALICIA"
-end
-
-local function iniciarVerificacaoPeriodica(key)
-    task.spawn(function()
-        while getgenv().KEY_VALID and not getgenv().KEY_EXPIRED do
-            wait(60)
-            
-            local expirou, info = verificarSeKeyExpirou(key)
-            
-            if expirou then
-                getgenv().KEY_EXPIRED = true
-                getgenv().KEY_VALID = false
-                
-                local telaExpiracao = Instance.new("Frame")
-                telaExpiracao.Parent = gui
-                telaExpiracao.Size = UDim2.new(1,0,1,0)
-                telaExpiracao.BackgroundColor3 = Color3.fromRGB(0,0,0)
-                telaExpiracao.BackgroundTransparency = 0
-                telaExpiracao.ZIndex = 1000
-                
-                local textoExp = Instance.new("TextLabel")
-                textoExp.Parent = telaExpiracao
-                textoExp.Size = UDim2.new(0, 400, 0, 100)
-                textoExp.Position = UDim2.new(0.5, -200, 0.5, -50)
-                textoExp.BackgroundColor3 = Color3.fromRGB(20,20,20)
-                textoExp.Text = "SUA KEY EXPIRU!\n\n" .. info .. "\n\nFechando em 5 segundos..."
-                textoExp.TextColor3 = Color3.new(1,1,1)
-                textoExp.TextSize = 16
-                textoExp.Font = Enum.Font.GothamBold
-                textoExp.TextWrapped = true
-                textoExp.ZIndex = 1001
-                local expCorner = Instance.new("UICorner")
-                expCorner.Parent = textoExp
-                expCorner.CornerRadius = UDim.new(0, 12)
-                
-                for i = 5, 1, -1 do
-                    textoExp.Text = "SUA KEY EXPIRU!\n\n" .. info .. "\n\nFechando em " .. i .. " segundos..."
-                    wait(1)
-                end
-                
-                game:Shutdown()
-            end
-        end
-    end)
-end
-
-btn.MouseButton1Click:Connect(function()
-    if box.Text == "" then
-        statusText.Text = "Digite a key!"
+-- CLIQUE DO BOTÃO
+validateBtn.MouseButton1Click:Connect(function()
+    local key = keyBox.Text
+    if key == "" then
+        statusText.Text = "Digite uma key!"
         statusText.TextColor3 = Color3.new(1,0.5,0)
-        wait(1.5)
-        statusText.Text = ""
         return
     end
     
-    statusText.Text = "Consultando servidor..."
+    statusText.Text = "Validando..."
     statusText.TextColor3 = Color3.new(0.5,0.5,1)
-    btn.Visible = false
+    validateBtn.Visible = false
     
     task.spawn(function()
-        local expirou, info = verificarSeKeyExpirou(box.Text)
+        local result = checkKey(key)
         
-        if not expirou then
+        if result and result.valid then
             getgenv().KEY_VALID = true
-            getgenv().USER_KEY = box.Text
-            
-            if type(info) == "number" then
-                statusText.Text = "KEY VALIDA! " .. info .. " dias restantes"
-            elseif info == "VITALICIA" then
-                statusText.Text = "KEY VALIDA! (PERMANENTE)"
-            else
-                statusText.Text = "KEY VALIDA!"
-            end
+            statusText.Text = "KEY VALIDA! Aguarde..."
             statusText.TextColor3 = Color3.new(0,1,0)
-            
-            iniciarVerificacaoPeriodica(box.Text)
-            
-            wait(1.5)
-            loginFrame:Destroy()
+            wait(1)
+            screen:Destroy()
         else
-            statusText.Text = info
+            local msg = result and result.reason or "Key inválida!"
+            if result and result.expired then msg = "KEY EXPIRADA!" end
+            statusText.Text = msg
             statusText.TextColor3 = Color3.new(1,0,0)
-            box.Text = ""
-            wait(2.5)
+            keyBox.Text = ""
+            wait(2)
             statusText.Text = ""
-            btn.Visible = true
+            validateBtn.Visible = true
         end
     end)
 end)
 
+-- TRAVA ATÉ VALIDAR
 repeat wait() until getgenv().KEY_VALID == true
-wait(1)
 
--- LOADING
-local loadingBg = Instance.new("Frame")
-loadingBg.Parent = gui
-loadingBg.Size = UDim2.new(1,0,1,0)
-loadingBg.BackgroundColor3 = Color3.fromRGB(0,0,0)
-loadingBg.BackgroundTransparency = 1
-
-local loadingText = Instance.new("TextLabel")
-loadingText.Parent = loadingBg
-loadingText.Size = UDim2.new(0, 200, 0, 40)
-loadingText.Position = UDim2.new(0.5, -100, 0.5, -20)
-loadingText.BackgroundTransparency = 1
-loadingText.Text = "JUNIOR HUB"
-loadingText.TextColor3 = Color3.new(1,1,1)
-loadingText.TextSize = 24
-loadingText.Font = Enum.Font.GothamBold
-loadingText.TextTransparency = 1
-
-for i = 0, 1, 0.1 do
-    loadingBg.BackgroundTransparency = 0.3 - i * 0.3
-    loadingText.TextTransparency = 1 - i
-    wait(0.05)
+-- REMOTE
+local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Packages")
+if remote then
+    remote = remote:FindFirstChild("_Index")
+    if remote then
+        remote = remote:FindFirstChild("sleitnick_knit@1.7.0")
+        if remote then
+            remote = remote:FindFirstChild("knit")
+            if remote then
+                remote = remote:FindFirstChild("Services")
+                if remote then
+                    remote = remote:FindFirstChild("SeasonService")
+                    if remote then
+                        remote = remote:FindFirstChild("RF")
+                        if remote then
+                            remote = remote:FindFirstChild("RequestRankedReward")
+                        end
+                    end
+                end
+            end
+        end
+    end
 end
-
-wait(1.5)
-
-for i = 0, 1, 0.1 do
-    loadingBg.BackgroundTransparency = i
-    loadingText.TextTransparency = i
-    wait(0.05)
-end
-
-loadingBg:Destroy()
-
-local function notify(texto)
-    local notif = Instance.new("TextLabel")
-    notif.Parent = gui
-    notif.Size = UDim2.new(0, 250, 0, 40)
-    notif.Position = UDim2.new(1, -260, 0.2, 0)
-    notif.BackgroundColor3 = Color3.fromRGB(0,0,0)
-    notif.BackgroundTransparency = 0.3
-    notif.TextColor3 = Color3.new(1,1,1)
-    notif.Text = texto
-    notif.TextSize = 14
-    notif.Font = Enum.Font.Gotham
-    notif.TextWrapped = true
-    local notifCorner = Instance.new("UICorner")
-    notifCorner.Parent = notif
-    notifCorner.CornerRadius = UDim.new(0, 8)
-    
-    notif.Position = UDim2.new(1, -200, 0.2, 0)
-    notif.BackgroundTransparency = 0.3
-    
-    wait(2.5)
-    notif:Destroy()
-end
-
-local remote = nil
-pcall(function()
-    remote = game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.7.0"):WaitForChild("knit"):WaitForChild("Services"):WaitForChild("SeasonService"):WaitForChild("RF"):WaitForChild("RequestRankedReward")
-end)
 
 if not remote then
-    notify("ERRO: Remote nao encontrado!")
+    print("Remote não encontrado")
     wait(3)
     game:Shutdown()
 end
 
-local showBtn = Instance.new("TextButton")
-showBtn.Parent = gui
-showBtn.Size = UDim2.new(0, 70, 0, 30)
-showBtn.Position = UDim2.new(0.5, -35, 0, 10)
-showBtn.Text = "MENU"
-showBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
-showBtn.BackgroundTransparency = 0.5
-showBtn.TextColor3 = Color3.new(1,1,1)
-showBtn.TextSize = 16
-showBtn.Font = Enum.Font.GothamBold
-local btnCorner2 = Instance.new("UICorner")
-btnCorner2.Parent = showBtn
-btnCorner2.CornerRadius = UDim.new(0, 8)
+-- BOTÃO MENU
+local menuBtn = Instance.new("TextButton")
+menuBtn.Parent = gui
+menuBtn.Size = UDim2.new(0, 60, 0, 25)
+menuBtn.Position = UDim2.new(0.5, -30, 0, 5)
+menuBtn.Text = "MENU"
+menuBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
+menuBtn.BackgroundTransparency = 0.5
+menuBtn.TextColor3 = Color3.new(1,1,1)
+menuBtn.TextSize = 12
 
-local frame = Instance.new("Frame")
-frame.Parent = gui
-frame.Size = UDim2.new(0, 280, 0, 180)
-frame.Position = UDim2.new(0.5, -140, 0.5, -90)
-frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
-frame.Visible = false
-frame.Active = true
-frame.Draggable = true
-local frameCorner = Instance.new("UICorner")
-frameCorner.Parent = frame
-frameCorner.CornerRadius = UDim.new(0, 12)
+-- FRAME PRINCIPAL
+local mainFrame = Instance.new("Frame")
+mainFrame.Parent = gui
+mainFrame.Size = UDim2.new(0, 250, 0, 150)
+mainFrame.Position = UDim2.new(0.5, -125, 0.5, -75)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+mainFrame.Visible = false
+mainFrame.Active = true
+mainFrame.Draggable = true
 
-local frameBorder = Instance.new("Frame")
-frameBorder.Parent = frame
-frameBorder.Size = UDim2.new(1, 0, 1, 0)
-frameBorder.Position = UDim2.new(0, 0, 0, 0)
-frameBorder.BackgroundTransparency = 1
-frameBorder.BorderSizePixel = 2
-frameBorder.BorderColor3 = Color3.fromRGB(170,0,0)
+local habilidadeBtn = Instance.new("TextButton")
+habilidadeBtn.Parent = mainFrame
+habilidadeBtn.Size = UDim2.new(0.8,0,0,40)
+habilidadeBtn.Position = UDim2.new(0.1,0,0.2,0)
+habilidadeBtn.Text = "HABILIDADE"
+habilidadeBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+habilidadeBtn.TextColor3 = Color3.new(1,1,1)
+habilidadeBtn.TextSize = 14
 
-local function abrirGUI()
-    frame.Visible = true
-    frame.BackgroundTransparency = 0
-end
-
-local function fecharGUI()
-    frame.Visible = false
-    showBtn.Text = "MENU"
-end
-
-local title = Instance.new("TextLabel")
-title.Parent = frame
-title.Size = UDim2.new(1,0,0,40)
-title.Position = UDim2.new(0,0,0,0)
-title.BackgroundColor3 = Color3.fromRGB(20,20,20)
-title.Text = "JUNIOR HUB"
-title.TextColor3 = Color3.new(1,1,1)
-title.TextSize = 20
-title.Font = Enum.Font.GothamBold
-local titleCorner2 = Instance.new("UICorner")
-titleCorner2.Parent = title
-titleCorner2.CornerRadius = UDim.new(0, 12)
-
-local container = Instance.new("Frame")
-container.Parent = frame
-container.Size = UDim2.new(1,0,1,-50)
-container.Position = UDim2.new(0,0,0,50)
-container.BackgroundTransparency = 1
-
-local layout = Instance.new("UIListLayout")
-layout.Parent = container
-layout.Padding = UDim.new(0, 15)
-layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-
-local function criarBotao(nome)
-    local btn = Instance.new("TextButton")
-    btn.Parent = container
-    btn.Size = UDim2.new(0.75,0,0,45)
-    btn.BackgroundColor3 = Color3.fromRGB(30,30,30)
-    btn.Text = nome
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.TextSize = 18
-    btn.Font = Enum.Font.GothamBold
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.Parent = btn
-    btnCorner.CornerRadius = UDim.new(0, 8)
-    return btn
-end
-
-local habilidadeBtn = criarBotao("HABILIDADE")
-local estiloBtn = criarBotao("ESTILO")
+local estiloBtn = Instance.new("TextButton")
+estiloBtn.Parent = mainFrame
+estiloBtn.Size = UDim2.new(0.8,0,0,40)
+estiloBtn.Position = UDim2.new(0.1,0,0.55,0)
+estiloBtn.Text = "ESTILO"
+estiloBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+estiloBtn.TextColor3 = Color3.new(1,1,1)
+estiloBtn.TextSize = 14
 
 local habilidadeOn = false
 local estiloOn = false
 
-showBtn.MouseButton1Click:Connect(function()
-    if not frame.Visible then
-        abrirGUI()
-        showBtn.Text = "X"
+menuBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = not mainFrame.Visible
+    if mainFrame.Visible then
+        menuBtn.Text = "X"
     else
-        fecharGUI()
-    end
-end)
-
-local dragging = false
-local dragStart
-local startPos
-
-frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = frame.Position
-    end
-end)
-
-frame.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
+        menuBtn.Text = "MENU"
     end
 end)
 
 habilidadeBtn.MouseButton1Click:Connect(function()
-    if getgenv().KEY_EXPIRED then
-        notify("KEY EXPIRADA!")
-        return
-    end
-    
     habilidadeOn = not habilidadeOn
-    
     if habilidadeOn then
         habilidadeBtn.BackgroundColor3 = Color3.fromRGB(0,170,0)
-        notify("HABILIDADE ATIVADA")
-        
         task.spawn(function()
-            while habilidadeOn and getgenv().KEY_VALID and not getgenv().KEY_EXPIRED do
-                pcall(function()
-                    remote:InvokeServer(4)
-                end)
+            while habilidadeOn do
+                pcall(function() remote:InvokeServer(4) end)
                 wait(1)
             end
         end)
     else
         habilidadeBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
-        notify("HABILIDADE DESATIVADA")
     end
 end)
 
 estiloBtn.MouseButton1Click:Connect(function()
-    if getgenv().KEY_EXPIRED then
-        notify("KEY EXPIRADA!")
-        return
-    end
-    
     estiloOn = not estiloOn
-    
     if estiloOn then
         estiloBtn.BackgroundColor3 = Color3.fromRGB(0,170,0)
-        notify("ESTILO ATIVADO")
-        
         task.spawn(function()
-            while estiloOn and getgenv().KEY_VALID and not getgenv().KEY_EXPIRED do
-                pcall(function()
-                    remote:InvokeServer(1)
-                end)
+            while estiloOn do
+                pcall(function() remote:InvokeServer(1) end)
                 wait(1)
             end
         end)
     else
         estiloBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
-        notify("ESTILO DESATIVADO")
     end
 end)
 
-notify("JUNIOR HUB CARREGADO")
-print("JUNIOR HUB CARREGADO - VERSAO DELTA")
+print("JUNIOR HUB CARREGADO")
