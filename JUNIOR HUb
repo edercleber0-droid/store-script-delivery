@@ -1,0 +1,534 @@
+--// Junior Hub - VERSAO OTIMIZADA (TAMANHO REDUZIDO)
+--// BACKEND: store-key-system.onrender.com
+
+getgenv().KEY_VALID = false
+
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local gui = Instance.new("ScreenGui")
+gui.Parent = player:WaitForChild("PlayerGui")
+gui.Name = "JuniorHub"
+gui.ResetOnSpawn = false
+
+-- CORES
+local cores = {
+    fundo = Color3.fromRGB(10,10,10),
+    vermelho = Color3.fromRGB(200,0,0),
+    verde = Color3.fromRGB(0,170,0),
+    cinza = Color3.fromRGB(30,30,30),
+    cinzaClaro = Color3.fromRGB(50,50,50),
+    branco = Color3.fromRGB(255,255,255)
+}
+
+-- FUNÇÃO DE ANIMAÇÃO
+local function animar(objeto, propriedades, tempo, estilo)
+    estilo = estilo or Enum.EasingStyle.Quad
+    local tween = TweenService:Create(objeto, TweenInfo.new(tempo, estilo, Enum.EasingDirection.Out), propriedades)
+    tween:Play()
+    return tween
+end
+
+-- FUNÇÃO PARA CRIAR BOTÃO
+local function criarBotao(parent, texto, posY, cor)
+    local btn = Instance.new("TextButton")
+    btn.Parent = parent
+    btn.Size = UDim2.new(0.8, 0, 0, 45)
+    btn.Position = UDim2.new(0.1, 0, posY, 0)
+    btn.Text = texto
+    btn.BackgroundColor3 = cor or cores.cinza
+    btn.TextColor3 = cores.branco
+    btn.TextSize = 16
+    btn.Font = Enum.Font.GothamBold
+    btn.BorderSizePixel = 0
+    
+    local corner = Instance.new("UICorner")
+    corner.Parent = btn
+    corner.CornerRadius = UDim.new(0, 12)
+    
+    -- ANIMAÇÃO HOVER
+    btn.MouseEnter:Connect(function()
+        animar(btn, {BackgroundColor3 = cores.cinzaClaro, Size = UDim2.new(0.82, 0, 0, 48)}, 0.2)
+    end)
+    
+    btn.MouseLeave:Connect(function()
+        if btn.Ativado then
+            animar(btn, {BackgroundColor3 = cores.verde, Size = UDim2.new(0.8, 0, 0, 45)}, 0.2)
+        else
+            animar(btn, {BackgroundColor3 = cor or cores.cinza, Size = UDim2.new(0.8, 0, 0, 45)}, 0.2)
+        end
+    end)
+    
+    return btn
+end
+
+-- ============================================================
+-- TELA DE LOGIN
+-- ============================================================
+local loginScreen = Instance.new("Frame")
+loginScreen.Parent = gui
+loginScreen.Size = UDim2.new(0, 400, 0, 280)
+loginScreen.Position = UDim2.new(0.5, -200, 0.5, -140)
+loginScreen.BackgroundColor3 = cores.fundo
+loginScreen.BackgroundTransparency = 0
+loginScreen.Active = true
+loginScreen.Draggable = true
+
+local loginCorner = Instance.new("UICorner")
+loginCorner.Parent = loginScreen
+loginCorner.CornerRadius = UDim.new(0, 20)
+
+local loginBorder = Instance.new("UIStroke")
+loginBorder.Parent = loginScreen
+loginBorder.Color = cores.vermelho
+loginBorder.Thickness = 2
+
+local loginTitle = Instance.new("TextLabel")
+loginTitle.Parent = loginScreen
+loginTitle.Size = UDim2.new(1, 0, 0, 50)
+loginTitle.Position = UDim2.new(0, 0, 0, 0)
+loginTitle.BackgroundColor3 = cores.vermelho
+loginTitle.Text = "JUNIOR HUB"
+loginTitle.TextColor3 = cores.branco
+loginTitle.TextSize = 24
+loginTitle.Font = Enum.Font.GothamBold
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.Parent = loginTitle
+titleCorner.CornerRadius = UDim.new(0, 20)
+
+local subTitle = Instance.new("TextLabel")
+subTitle.Parent = loginScreen
+subTitle.Size = UDim2.new(1, 0, 0, 25)
+subTitle.Position = UDim2.new(0, 0, 0, 55)
+subTitle.BackgroundTransparency = 1
+subTitle.Text = "Digite sua Key"
+subTitle.TextColor3 = Color3.fromRGB(180,180,180)
+subTitle.TextSize = 12
+subTitle.Font = Enum.Font.Gotham
+
+local keyBox = Instance.new("TextBox")
+keyBox.Parent = loginScreen
+keyBox.Size = UDim2.new(0.8, 0, 0, 45)
+keyBox.Position = UDim2.new(0.1, 0, 0.3, 0)
+keyBox.PlaceholderText = "Cole sua Key"
+keyBox.BackgroundColor3 = cores.cinza
+keyBox.TextColor3 = cores.branco
+keyBox.TextSize = 16
+keyBox.Font = Enum.Font.Gotham
+keyBox.ClearTextOnFocus = false
+
+local boxCorner = Instance.new("UICorner")
+boxCorner.Parent = keyBox
+boxCorner.CornerRadius = UDim.new(0, 12)
+
+local validateBtn = Instance.new("TextButton")
+validateBtn.Parent = loginScreen
+validateBtn.Size = UDim2.new(0.5, 0, 0, 45)
+validateBtn.Position = UDim2.new(0.25, 0, 0.55, 0)
+validateBtn.Text = "VALIDAR"
+validateBtn.BackgroundColor3 = cores.vermelho
+validateBtn.TextColor3 = cores.branco
+validateBtn.TextSize = 18
+validateBtn.Font = Enum.Font.GothamBold
+validateBtn.BorderSizePixel = 0
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.Parent = validateBtn
+btnCorner.CornerRadius = UDim.new(0, 12)
+
+validateBtn.MouseEnter:Connect(function()
+    animar(validateBtn, {BackgroundColor3 = Color3.fromRGB(220,0,0), Size = UDim2.new(0.52, 0, 0, 48)}, 0.2)
+end)
+
+validateBtn.MouseLeave:Connect(function()
+    animar(validateBtn, {BackgroundColor3 = cores.vermelho, Size = UDim2.new(0.5, 0, 0, 45)}, 0.2)
+end)
+
+local statusText = Instance.new("TextLabel")
+statusText.Parent = loginScreen
+statusText.Size = UDim2.new(0.8, 0, 0, 35)
+statusText.Position = UDim2.new(0.1, 0, 0.75, 0)
+statusText.BackgroundTransparency = 1
+statusText.Text = ""
+statusText.TextColor3 = cores.branco
+statusText.TextSize = 12
+statusText.Font = Enum.Font.Gotham
+
+-- ============================================================
+-- FUNÇÕES
+-- ============================================================
+local function consultarRender(key)
+    local userId = tostring(player.UserId)
+    local url = "https://store-key-system.onrender.com/check?key=" .. key .. "&userId=" .. userId
+    
+    local success, response = pcall(function()
+        return game:HttpGet(url, true)
+    end)
+    
+    if not success then
+        return nil, "Erro de conexão"
+    end
+    
+    local decoded = HttpService:JSONDecode(response)
+    return decoded, nil
+end
+
+local function verificarKey(key)
+    local data, erro = consultarRender(key)
+    
+    if erro then
+        return false, erro
+    end
+    
+    if not data then
+        return false, "Erro ao validar"
+    end
+    
+    if not data.valid then
+        if data.reason == "used_by_other_user" then
+            return false, "KEY JÁ ESTÁ SENDO USADA!"
+        end
+        if data.expired then
+            return false, "KEY EXPIRADA!"
+        end
+        return false, "KEY INVÁLIDA!"
+    end
+    
+    if data.tipo == "perm" or data.expires == nil then
+        return true, "PERMANENTE"
+    end
+    
+    local agora = os.time() * 1000
+    local diff = data.expires - agora
+    
+    if diff <= 0 then
+        return false, "KEY EXPIRADA!"
+    end
+    
+    local horas = math.floor(diff / (1000 * 60 * 60))
+    local dias = math.floor(horas / 24)
+    
+    if horas < 24 then
+        if horas <= 1 then
+            return true, "Expira em 1 hora"
+        else
+            return true, "Expira em " .. horas .. " horas"
+        end
+    else
+        if dias == 1 then
+            return true, "Expira em 1 dia"
+        else
+            return true, "Expira em " .. dias .. " dias"
+        end
+    end
+end
+
+-- CLIQUE DO BOTÃO
+validateBtn.MouseButton1Click:Connect(function()
+    local key = keyBox.Text
+    if key == "" then
+        statusText.Text = "Digite uma key!"
+        statusText.TextColor3 = Color3.fromRGB(255,150,0)
+        return
+    end
+    
+    statusText.Text = "Validando..."
+    statusText.TextColor3 = Color3.fromRGB(100,100,255)
+    validateBtn.Visible = false
+    
+    task.spawn(function()
+        local valida, msg = verificarKey(key)
+        
+        if valida then
+            getgenv().KEY_VALID = true
+            statusText.Text = "✅ " .. msg
+            statusText.TextColor3 = Color3.fromRGB(0,255,0)
+            
+            animar(loginScreen, {BackgroundTransparency = 1}, 0.5)
+            wait(0.5)
+            loginScreen:Destroy()
+        else
+            statusText.Text = "❌ " .. msg
+            statusText.TextColor3 = Color3.fromRGB(255,0,0)
+            keyBox.Text = ""
+            animar(keyBox, {BackgroundColor3 = Color3.fromRGB(50,0,0)}, 0.3)
+            wait(0.3)
+            animar(keyBox, {BackgroundColor3 = cores.cinza}, 0.3)
+            wait(1.5)
+            statusText.Text = ""
+            validateBtn.Visible = true
+        end
+    end)
+end)
+
+repeat wait() until getgenv().KEY_VALID == true
+wait(1)
+
+-- ============================================================
+-- REMOTE
+-- ============================================================
+local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Packages")
+if remote then
+    remote = remote:FindFirstChild("_Index")
+    if remote then
+        remote = remote:FindFirstChild("sleitnick_knit@1.7.0")
+        if remote then
+            remote = remote:FindFirstChild("knit")
+            if remote then
+                remote = remote:FindFirstChild("Services")
+                if remote then
+                    remote = remote:FindFirstChild("SeasonService")
+                    if remote then
+                        remote = remote:FindFirstChild("RF")
+                        if remote then
+                            remote = remote:FindFirstChild("RequestRankedReward")
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+if not remote then
+    print("Remote não encontrado")
+    wait(3)
+    game:Shutdown()
+end
+
+-- ============================================================
+-- BOTÃO MENU
+-- ============================================================
+local menuBtn = Instance.new("TextButton")
+menuBtn.Parent = gui
+menuBtn.Size = UDim2.new(0, 60, 0, 30)
+menuBtn.Position = UDim2.new(0.5, -30, 0.01, 0)
+menuBtn.Text = "MENU"
+menuBtn.BackgroundColor3 = cores.fundo
+menuBtn.BackgroundTransparency = 0.2
+menuBtn.TextColor3 = cores.branco
+menuBtn.TextSize = 14
+menuBtn.Font = Enum.Font.GothamBold
+menuBtn.BorderSizePixel = 0
+
+local menuCorner = Instance.new("UICorner")
+menuCorner.Parent = menuBtn
+menuCorner.CornerRadius = UDim.new(0, 10)
+
+local menuStroke = Instance.new("UIStroke")
+menuStroke.Parent = menuBtn
+menuStroke.Color = cores.vermelho
+menuStroke.Thickness = 1.5
+
+menuBtn.MouseEnter:Connect(function()
+    animar(menuBtn, {BackgroundTransparency = 0, Size = UDim2.new(0, 65, 0, 35)}, 0.2)
+end)
+
+menuBtn.MouseLeave:Connect(function()
+    animar(menuBtn, {BackgroundTransparency = 0.2, Size = UDim2.new(0, 60, 0, 30)}, 0.2)
+end)
+
+-- ============================================================
+-- FRAME PRINCIPAL (TAMANHO REDUZIDO)
+-- ============================================================
+local mainFrame = Instance.new("Frame")
+mainFrame.Parent = gui
+mainFrame.Size = UDim2.new(0, 320, 0, 240)
+mainFrame.Position = UDim2.new(0.5, -160, 0.5, -120)
+mainFrame.BackgroundColor3 = cores.fundo
+mainFrame.BackgroundTransparency = 1
+mainFrame.Visible = false
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.Parent = mainFrame
+mainCorner.CornerRadius = UDim.new(0, 15)
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Parent = mainFrame
+mainStroke.Color = cores.vermelho
+mainStroke.Thickness = 2
+
+local frameTitle = Instance.new("TextLabel")
+frameTitle.Parent = mainFrame
+frameTitle.Size = UDim2.new(1, 0, 0, 45)
+frameTitle.Position = UDim2.new(0, 0, 0, 0)
+frameTitle.BackgroundColor3 = cores.vermelho
+frameTitle.Text = "JUNIOR HUB"
+frameTitle.TextColor3 = cores.branco
+frameTitle.TextSize = 20
+frameTitle.Font = Enum.Font.GothamBold
+
+local frameTitleCorner = Instance.new("UICorner")
+frameTitleCorner.Parent = frameTitle
+frameTitleCorner.CornerRadius = UDim.new(0, 15)
+
+-- ============================================================
+-- BOTÕES
+-- ============================================================
+local habilidadeBtn = criarBotao(mainFrame, "HABILIDADE", 0.22, cores.cinza)
+local estiloBtn = criarBotao(mainFrame, "ESTILO", 0.5, cores.cinza)
+
+local footerText = Instance.new("TextLabel")
+footerText.Parent = mainFrame
+footerText.Size = UDim2.new(0.8, 0, 0, 30)
+footerText.Position = UDim2.new(0.1, 0, 0.78, 0)
+footerText.BackgroundTransparency = 1
+footerText.Text = "Selecione uma função"
+footerText.TextColor3 = Color3.fromRGB(150,150,150)
+footerText.TextSize = 11
+footerText.Font = Enum.Font.Gotham
+
+-- ============================================================
+-- VARIÁVEIS
+-- ============================================================
+local habilidadeOn = false
+local estiloOn = false
+
+-- ============================================================
+-- FUNÇÕES DO MENU
+-- ============================================================
+local function abrirMenu()
+    mainFrame.Visible = true
+    animar(mainFrame, {BackgroundTransparency = 0}, 0.3)
+    mainFrame.Position = UDim2.new(0.5, -160, 0.5, -130)
+    animar(mainFrame, {Position = UDim2.new(0.5, -160, 0.5, -120)}, 0.4, Enum.EasingStyle.Back)
+    menuBtn.Text = "X"
+end
+
+local function fecharMenu()
+    animar(mainFrame, {BackgroundTransparency = 1}, 0.2)
+    wait(0.2)
+    mainFrame.Visible = false
+    menuBtn.Text = "MENU"
+end
+
+menuBtn.MouseButton1Click:Connect(function()
+    if not mainFrame.Visible then
+        abrirMenu()
+    else
+        fecharMenu()
+    end
+end)
+
+-- ============================================================
+-- DRAG
+-- ============================================================
+local dragging = false
+local dragStart
+local startPos
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+    end
+end)
+
+mainFrame.InputEnded:Connect(function()
+    dragging = false
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- ============================================================
+-- HABILIDADE (VERDE AO ATIVAR)
+-- ============================================================
+habilidadeBtn.MouseButton1Click:Connect(function()
+    habilidadeOn = not habilidadeOn
+    
+    if habilidadeOn then
+        habilidadeBtn.BackgroundColor3 = cores.verde
+        habilidadeBtn.Ativado = true
+        footerText.Text = "HABILIDADE ATIVADA"
+        footerText.TextColor3 = cores.verde
+        animar(footerText, {TextColor3 = Color3.fromRGB(150,150,150)}, 2)
+        
+        task.spawn(function()
+            while habilidadeOn do
+                pcall(function()
+                    remote:InvokeServer(4)
+                end)
+                wait(1)
+            end
+        end)
+    else
+        habilidadeBtn.BackgroundColor3 = cores.cinza
+        habilidadeBtn.Ativado = false
+        footerText.Text = "HABILIDADE DESATIVADA"
+        footerText.TextColor3 = cores.vermelho
+        animar(footerText, {TextColor3 = Color3.fromRGB(150,150,150)}, 2)
+    end
+end)
+
+-- ============================================================
+-- ESTILO (VERDE AO ATIVAR)
+-- ============================================================
+estiloBtn.MouseButton1Click:Connect(function()
+    estiloOn = not estiloOn
+    
+    if estiloOn then
+        estiloBtn.BackgroundColor3 = cores.verde
+        estiloBtn.Ativado = true
+        footerText.Text = "ESTILO ATIVADO"
+        footerText.TextColor3 = cores.verde
+        animar(footerText, {TextColor3 = Color3.fromRGB(150,150,150)}, 2)
+        
+        task.spawn(function()
+            while estiloOn do
+                pcall(function()
+                    remote:InvokeServer(1)
+                end)
+                wait(1)
+            end
+        end)
+    else
+        estiloBtn.BackgroundColor3 = cores.cinza
+        estiloBtn.Ativado = false
+        footerText.Text = "ESTILO DESATIVADO"
+        footerText.TextColor3 = cores.vermelho
+        animar(footerText, {TextColor3 = Color3.fromRGB(150,150,150)}, 2)
+    end
+end)
+
+-- ============================================================
+-- NOTIFICAÇÃO
+-- ============================================================
+local notif = Instance.new("TextLabel")
+notif.Parent = gui
+notif.Size = UDim2.new(0, 250, 0, 40)
+notif.Position = UDim2.new(0.5, -125, 0.85, 0)
+notif.BackgroundColor3 = cores.fundo
+notif.BackgroundTransparency = 0.3
+notif.Text = "JUNIOR HUB CARREGADO"
+notif.TextColor3 = cores.branco
+notif.TextSize = 12
+notif.Font = Enum.Font.Gotham
+
+local notifCorner = Instance.new("UICorner")
+notifCorner.Parent = notif
+notifCorner.CornerRadius = UDim.new(0, 12)
+
+animar(notif, {BackgroundTransparency = 0}, 0.3)
+wait(2)
+animar(notif, {BackgroundTransparency = 1}, 0.5)
+wait(0.5)
+notif:Destroy()
+
+print("JUNIOR HUB CARREGADO")
